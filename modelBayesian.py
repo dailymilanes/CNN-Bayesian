@@ -51,7 +51,7 @@ def createModel(nb_classes = 4, Chans = 22, Samples = 1000, dropoutRate = 0.5, i
 
 # estocastic model Prior as a Standard Gaussian
 
-def SCNBayesianTL(nb_classes, Chans, Samples, dropoutRate,cropDistance,count_trial):
+def SCNBayesian(nb_classes, Chans, Samples, dropoutRate,cropDistance,count_trial):
     tfd = tfp.distributions
     kl_divergence_function = (lambda q, p, _: tfd.kl_divergence(q, p)/tf.cast(int(count_trial*math.ceil((1125-Samples)/cropDistance)), dtype=tf.float32))
    
