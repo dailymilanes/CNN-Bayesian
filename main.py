@@ -11,7 +11,7 @@ Created on Thu Feb 11 20:09:07 2021
 # To ensure repeatability of the experiment #2, #3 and #4, please use seed=1 up to 16
 
 # To run any experiment, select appropietly subject, seed, dropoutRate, cropDistance=2
-# cropSize=1000 to datatsets 2a and 2b, cropSize=750 to datset IVa
+# cropSize=1000 to datasets 2a and 2b, cropSize=750 to datset IVa
 
 # nb_classes=4, channels=22, fraction=6 to dataset 2a
 # nb_classes=2, channels=3, fraction=5 to dataset 2b
@@ -21,22 +21,15 @@ Created on Thu Feb 11 20:09:07 2021
 
 
 
-import eegTrain
-import eegEvaluate
+import eegBayesianTrain
+import eegBayesianEvaluate
 
 global dataDirectory
-eegTrain.dataDirectory = '../Data/'    
+eegBayesianTrain.dataDirectory = '../Data/'    
 
 global weightsDirectory 
-eegTrain.weightsDirectory = '../Weights/'
+eegBayesianTrain.weightsDirectory = '../Weights/'
 
-
-# Experiment #1
-#eegTrain.trainKFold('B01',dropoutRate=0.5, cropDistance = 2, cropSize = 1000)
-
-#Nested KFold
-
-#eegTrain.trainNestedKFold('aa', dropoutRate=0.9, optim='adam', cropDistance = 125, cropSize = 750)
 
 # Experiment #2
 # eegTrain.intraSubjectTrain('B01', dropoutRate=0.5, cropDistance = 2, cropSize = 1000)
@@ -45,9 +38,6 @@ eegTrain.weightsDirectory = '../Weights/'
 # eegTrain.interSubjectTrain(dropoutRate=0.5, cropDistance = 2, cropSize = 1000,
 #                       nb_classes = 2,exclude = 0)
 
-# # Experiment 4
-#eegTrain.trainUnkownSubject(dropoutRate=0.5, cropDistance = 2, cropSize = 1000,
- #                      nb_classes = 2, exclude = 1)
 # Evaluate function
 # Specified the weightsFileName
 #weightsFileName='../Weights/B01_Seed_19_R_1_d_0.50_c_2_x_0_weights.hdf5'
