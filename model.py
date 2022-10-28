@@ -5,11 +5,24 @@ Created on Fri Feb 12 17:03:49 2021
 @author: Daily Milanés Hermosilla
 """
 
-import keras.utils
-from keras import backend as K
-from keras.constraints import max_norm
-from keras.layers import Conv2D, Input, Flatten, Dense, BatchNormalization, Dropout
-from keras.models import Model
+import math
+import tensorflow as tf
+from tensorflow.keras import datasets, layers, models
+import numpy as np
+from tensorflow.keras import backend as K
+import tensorflow.keras.utils
+from tensorflow.keras.layers import Conv2D, Input, Flatten, Dense, BatchNormalization, Dropout
+from tensorflow.keras.constraints import max_norm
+from tensorflow.keras.models import Model
+
+import tensorflow_probability as tfp
+import tensorflow.compat.v1 as tf1
+import tensorflow.compat.v2 as tf
+from tensorflow_probability.python import util as tfp_util
+from tensorflow_probability.python.distributions import deterministic as deterministic_lib
+from tensorflow_probability.python.distributions import independent as independent_lib
+from tensorflow_probability.python.distributions import normal as normal_lib
+
 
 def square(x): 
     return K.square(x) 
