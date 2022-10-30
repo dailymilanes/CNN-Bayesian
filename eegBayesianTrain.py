@@ -40,7 +40,7 @@ weightsDirectory = ''
 
 
 def trainBayesian(datalist,labelslist, subject, seed, exp, exclude = 0, cropDistance = 2, cropSize = 1000, 
-                  dropoutRate = 0.8, fraction = 6, channels = 22, nb_classes = 4, varianza=0.1, moped):
+                  dropoutRate = 0.8, fraction = 6, channels = 22, nb_classes = 4, varianza=0.1, moped=True):
     
         
     droputStr = "%0.2f" % dropoutRate    
@@ -52,13 +52,13 @@ def trainBayesian(datalist,labelslist, subject, seed, exp, exclude = 0, cropDist
         
         baseFileName= weightsDirectory_output+subject+'bayesian'+ '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(seed)+'_exp_'+str(exp)+'_exclude_'+str(exclude)
         if moped==True:  
-          weightFileName=baseFileName +'_with_prior_0.1_sin_drop_weights.hdf5'
+          weightFileName=baseFileName +'_with_prior_0.1_no_drop_weights.hdf5'
           obtainWeights(subject,cropSize=cropSize, dropoutRate=dropoutRate,channels = channels,nb_classes=nb_classes, seed=seed)  
           classifier = SCNBayesianTL(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
           file = baseFileName+'_with_prior_0.1_no_drop.json'
         else:
-          weightFileName=baseFileName +'_no_prior_0.1_sin_drop_weights.hdf5' 
+          weightFileName=baseFileName +'_no_prior_0.1_no_drop_weights.hdf5' 
           classifier = SCNBayesian(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
           file = baseFileName+'_no_prior_0.1_no_drop.json'
@@ -91,7 +91,7 @@ def trainBayesian(datalist,labelslist, subject, seed, exp, exclude = 0, cropDist
     
 # This function prepares a intra subject training for Experiment #2. The number of repetitions is now 16, each one with a different seed
    
-def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 1000):
+def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 1000, moped=True):
          
     if subject[0] == 'A':
        channels=22
@@ -112,7 +112,7 @@ def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 10
        trainBayesian(datalist, labelslist, subject, seed, j,
                    cropDistance = cropDistance, cropSize = cropSize, 
                    dropoutRate = dropoutRate, fraction = fraction, 
-                   channels = channels, nb_classes = nb_classes)
+                   channels = channels, nb_classes = nb_classes,moped=moped)
        seed=seed+1
 
 
@@ -122,7 +122,7 @@ def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 10
 # If experiment #4, exclude different of 0 and all data training and evaluating for all subjects except exclude subject are load
   
 def interSubjectTrain(dropoutRate=0.5, cropDistance = 50, cropSize = 1000,
-                      nb_classes = 4,exclude = 0):
+                      nb_classes = 4,exclude = 0, moped=True):
       
      if nb_classes==4:
        data='A'
@@ -150,7 +150,7 @@ def interSubjectTrain(dropoutRate=0.5, cropDistance = 50, cropSize = 1000,
         trainBayesian(datalist, labelslist, 'All', seed, j, exclude=exclude,
                    cropDistance = cropDistance, cropSize = cropSize, 
                    dropoutRate = dropoutRate, fraction = fraction, 
-                   channels = channels, nb_classes = nb_classes)
+                   channels = channels, nb_classes = nb_classes, moped=moped)
         seed=seed+1
 
 # function to inicializate the prior from deterministic weights
