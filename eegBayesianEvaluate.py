@@ -78,7 +78,7 @@ def Evaluate(subject, cropDistance, cropSize, model, datadirectory, weightsDirec
            j=test_indices[k]
            tensor_mc_after[:,j,:,:]=prediction_mc_after[:,k,:,:]
 
-      np.save(weightsDirectory+'tensor_SE_Bayesian'+subject+model+'_seed_'+str(i)+'_sin_drop_after.npy', tensor_mc_after, allow_pickle=False)  
+      np.save(weightsDirectory+'tensor_'+subject+'_Bayesian_'+ model+'_'+ type_training+ '_seed_'+str(i)+'_sin_drop_after.npy', tensor_mc_after, allow_pickle=False)  
         
         
         
