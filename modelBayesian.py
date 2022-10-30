@@ -45,7 +45,7 @@ def createModel(nb_classes = 4, Chans = 22, Samples = 1000, dropoutRate = 0.5, i
     block  = keras.layers.Activation(log)(block) 
     flatten = Flatten()(block) 
     block  = Dropout(dropoutRate)(flatten)
-    dense   = Dense(nb_classes, kernel_constraint = max_norm(0.5),name='Dense')(flatten) 
+    dense   = Dense(nb_classes, kernel_constraint = max_norm(0.5),name='Dense')(block) 
     softmax = keras.layers.Activation('softmax')(dense)      
     return Model(inputs=input_main, outputs=softmax) 
 
@@ -54,24 +54,23 @@ def createModel(nb_classes = 4, Chans = 22, Samples = 1000, dropoutRate = 0.5, i
 def SCNBayesian(nb_classes, Chans, Samples, dropoutRate,cropDistance,count_trial):
     tfd = tfp.distributions
     kl_divergence_function = (lambda q, p, _: tfd.kl_divergence(q, p)/tf.cast(int(count_trial*math.ceil((1125-Samples)/cropDistance)), dtype=tf.float32))
-   
+     
     my_shape = (Samples, Chans, 1)
     if K.image_data_format() == 'channels_first':
         my_shape = (1, Samples, Chans)
     # start the model     
     input_main = Input(my_shape) 
-    block1 = tfp.python.layers.Convolution2DFlipout(40, kernel_size=(45, 1), strides = (2, 1), input_shape = my_shape, kernel_prior_fn=default_multivariate_normal_fn1,
-                                                   kernel_divergence_fn=kl_divergence_function)(input_main) 
-    block1 = tfp.python.layers.Convolution2DFlipout(40, (1, Chans),kernel_prior_fn=default_multivariate_normal_fn2,kernel_divergence_fn=kl_divergence_function)(block1)
+    block1 = tfp.python.layers.Convolution2DFlipout(40, kernel_size=(45, 1), strides = (2, 1), input_shape = my_shape,kernel_divergence_fn=kl_divergence_function)(input_main) 
+    block1 = tfp.python.layers.Convolution2DFlipout(40, (1, Chans),kernel_divergence_fn=kl_divergence_function)(block1)
     block1 = BatchNormalization(epsilon=1e-05, momentum=0.1)(block1) 
     block1 = tf.keras.layers.Activation(square)(block1)
     block1 = tf.keras.layers.AveragePooling2D(pool_size=(45, 1), strides = (1,1))(block1)
     block1 = tf.keras.layers.MaxPooling2D(pool_size=(8, 1))(block1)
     block1  = tf.keras.layers.Activation(log)(block1) 
     flatten = Flatten()(block1) 
-  #  block1 = tf.keras.layers.Dropout(dropoutRate)(flatten)
-    dense   = tfp.python.layers.DenseFlipout(nb_classes,kernel_prior_fn=default_multivariate_normal_fn3, bias_prior_fn=default_multivariate_normal_fn4,
-                                              kernel_divergence_fn=kl_divergence_function,activation=tf.nn.softmax)(flatten) 
+#    block1 = tf.keras.layers.Dropout(dropoutRate)(faltten)
+    dense   = tfp.python.layers.DenseFlipout(nb_classes, kernel_prior_fn=tfp.layers.default_multivariate_normal_fn, bias_prior_fn=tfp.layers.default_multivariate_normal_fn, 
+                                            kernel_divergence_fn=kl_divergence_function,activation=tf.nn.softmax)(flatten) 
     return Model(inputs=input_main, outputs=dense)
 
 
@@ -98,7 +97,6 @@ def SCNBayesianTL(nb_classes, Chans, Samples, dropoutRate,cropDistance,count_tri
     dense   = tfp.python.layers.DenseFlipout(nb_classes,kernel_prior_fn=default_multivariate_normal_fn3, bias_prior_fn=default_multivariate_normal_fn4,
                                               kernel_divergence_fn=kl_divergence_function,activation=tf.nn.softmax)(flatten) 
     return Model(inputs=input_main, outputs=dense)
- 
  
  
 def default_multivariate_normal_fn1(dtype, shape, name, trainable,
@@ -140,7 +138,7 @@ def default_multivariate_normal_fn3(dtype, shape, name, trainable,
       
     weights_layer3 = tf.convert_to_tensor(weights_layer33[0],tf.float32)
     z=np.abs(weights_layer33[0])
-    var_layer3=np.sqrt(0.1*z)
+    var_layer3=0.1*z
        
     dist = normal_lib.Normal(loc=weights_layer3, scale=var_layer3)
     
@@ -156,7 +154,7 @@ def default_multivariate_normal_fn4(dtype, shape, name, trainable,
       
     bias_layer3=tf.convert_to_tensor(weights_layer33[1],tf.float32)
     z=np.abs(weights_layer33[1])
-    bias_var3=np.sqrt(0.1*z)
+    bias_var3=0.1*z
     
    
     dist = normal_lib.Normal(
@@ -164,6 +162,5 @@ def default_multivariate_normal_fn4(dtype, shape, name, trainable,
       
     batch_ndims = tf.size(dist.batch_shape_tensor())
     return independent_lib.Independent(
-        dist, reinterpreted_batch_ndims=batch_ndims)
-
-
+        dist, reinterpreted_batch_ndims=batch_ndims)  
+   
