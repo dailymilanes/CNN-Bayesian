@@ -78,3 +78,45 @@ def Generator(trialList, trialLabels, classCount, indexs, channels, cropDistance
            y = np.array(np.copy(labels))
            i += m
            yield(x, y)
+            
+ def makeCrops1(data, cropDistance, cropSize):
+    
+    z = []
+    timeSpam = len(data[:, 0])
+    channels = len(data[0, :])
+    cropsCount = int(math.ceil((timeSpam-cropSize) / cropDistance))    
+    if K.image_data_format() == 'channels_first':
+        y = np.zeros((1, cropSize, channels), dtype=np.float32)
+        for i in range(0, cropsCount):
+             j = i*cropDistance
+             y[0,:,:] = data[j:cropSize+j, :]
+             z.append(np.copy(y))   
+    else:
+        y = np.zeros((cropSize, channels, 1), dtype=np.float32)
+        for i in range(0, cropsCount):
+             j = i*cropDistance
+             y[:,:,0] = data[j:cropSize+j, :]
+             z.append(np.copy(y))   
+    return z
+
+
+
+# This function create the numpy arrays to train or to validation from the lists of trials of left hand (leftList),
+      # right hand(rightList), feet (footList) and tongue(tongueList)
+# indexs is a list that contains the number of trials to train or to validate 	
+
+ def makeNumpys1(dataList, labelslist,cropDistance, cropSize, nb_class, indexs):
+     
+    data = []
+    labels = []    
+# Analize if the dataset is 2a or 2b, taking into consideration the lenght of footList  
+            
+    for i in indexs:
+        z = makeCrops1(dataList[i], cropDistance, cropSize)
+        data = data + z
+        ilabel = tf.keras.utils.to_categorical(labelslist[i], nb_class).astype('float32')
+        for k in range(len(z)):
+            labels.append(np.copy(ilabel))
+                
+    return np.array(data, dtype=np.float32), np.array(labels, dtype=np.float32)
+    
