@@ -40,7 +40,7 @@ weightsDirectory = ''
 
 
 def trainBayesian(datalist,labelslist, subject, seed, exp, exclude = 0, cropDistance = 2, cropSize = 1000, 
-                  dropoutRate = 0.8, fraction = 6, channels = 22, nb_classes = 4, varianza=0.1, moped=True):
+                  dropoutRate = 0.8, fraction = 6, channels = 22, nb_classes = 4, varianza=0.1, model='MOPED', type_training='SE'):
     
         
     droputStr = "%0.2f" % dropoutRate    
@@ -50,9 +50,9 @@ def trainBayesian(datalist,labelslist, subject, seed, exp, exclude = 0, cropDist
     
     for train_indices, val_indices in cv.split(pseudoTrialList, pseudolabelList):
         
-        baseFileName= weightsDirectory_output+subject+'bayesian'+ '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(seed)+'_exp_'+str(exp)+'_exclude_'+str(exclude)
-        if moped==True:  
-          weightFileName=baseFileName +'_with_prior_0.1_no_drop_weights.hdf5'
+        baseFileName= weightsDirectory_output+subject+'_Bayesian_'+ model+'_'+ type_training+ '_seed_'+str(i)+'_sin_drop'
+        if model='MOPED':  
+          weightFileName=baseFileName +'_weights.hdf5'
           obtainWeights(subject,cropSize=cropSize, dropoutRate=dropoutRate,channels = channels,nb_classes=nb_classes, seed=seed)  
           classifier = SCNBayesianTL(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
@@ -91,7 +91,7 @@ def trainBayesian(datalist,labelslist, subject, seed, exp, exclude = 0, cropDist
     
 # This function prepares a intra subject training for Experiment #2. The number of repetitions is now 16, each one with a different seed
    
-def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 1000, moped=True):
+def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 1000, model='MOPED'):
          
     if subject[0] == 'A':
        channels=22
@@ -112,7 +112,7 @@ def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 10
        trainBayesian(datalist, labelslist, subject, seed, j,
                    cropDistance = cropDistance, cropSize = cropSize, 
                    dropoutRate = dropoutRate, fraction = fraction, 
-                   channels = channels, nb_classes = nb_classes,moped=moped)
+                   channels = channels, nb_classes = nb_classes,model=model, type_training='SE')
        seed=seed+1
 
 
@@ -150,7 +150,7 @@ def interSubjectTrain(dropoutRate=0.5, cropDistance = 50, cropSize = 1000,
         trainBayesian(datalist, labelslist, 'All', seed, j, exclude=exclude,
                    cropDistance = cropDistance, cropSize = cropSize, 
                    dropoutRate = dropoutRate, fraction = fraction, 
-                   channels = channels, nb_classes = nb_classes, moped=moped)
+                   channels = channels, nb_classes = nb_classes, model=model, type_training='NSE')
         seed=seed+1
 
 # function to inicializate the prior from deterministic weights
@@ -164,7 +164,7 @@ def obtainWeights(subject,cropSize, dropoutRate,channels,nb_classes, seed, varia
     dropoutStr = "%0.2f" % dropoutRate
 
     classifier=eegBayesianUtils.createModel(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate)  
-    classifier.load_weights(weightsDirectory+subject+'_d_'+str(dropoutStr)+'_c_'+str(2)+'_seed'+str(seed)+'_exp_'+str(seed)+'_exclude_0_weights.hdf5')
+    classifier.load_weights(weightsDirectory+subject+ '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(seed)+'_exp_'+str(repeat)+'_exclude_'+str(exclude)+'_weights.hdf5')
     layer=classifier.get_layer(name='TimeConv')
     weights_layer11=layer.get_weights()
     weights_layer1 = tf.convert_to_tensor(weights_layer11,tf.float32)
