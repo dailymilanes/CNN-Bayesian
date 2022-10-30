@@ -32,11 +32,11 @@ eegBayesianTrain.weightsDirectory = '../Weights/'
 
 
 # Experiment #2
-# eegTrain.intraSubjectTrain('B01', dropoutRate=0.5, cropDistance = 2, cropSize = 1000)
+# eegeegBayesianTrain.intraSubjectTrain('B01', dropoutRate=0.5, cropDistance = 2, cropSize = 1000, moped=True)    # for example to train subject B01 of dataset 2b with Moped method
 
 # # Experiment #3
-# eegTrain.interSubjectTrain(dropoutRate=0.5, cropDistance = 2, cropSize = 1000,
-#                       nb_classes = 2,exclude = 0)
+# eegeegBayesianTrain.interSubjectTrain(dropoutRate=0.5, cropDistance = 2, cropSize = 1000,
+#                       nb_classes = 2,exclude = 0, moped=True)                                        # for example to train with all subjects of dataset 2b, if dataset 2a please replace nd_classes=4
 
 # Evaluate function
 # Specified the weightsFileName
