@@ -50,7 +50,6 @@ def createModel(nb_classes = 4, Chans = 22, Samples = 1000, dropoutRate = 0.5, i
     return Model(inputs=input_main, outputs=softmax) 
 
 # estocastic model Prior as a Standard Gaussian
-
 def SCNBayesian(nb_classes, Chans, Samples, dropoutRate,cropDistance,count_trial):
     tfd = tfp.distributions
     kl_divergence_function = (lambda q, p, _: tfd.kl_divergence(q, p)/tf.cast(int(count_trial*math.ceil((1125-Samples)/cropDistance)), dtype=tf.float32))
@@ -68,7 +67,6 @@ def SCNBayesian(nb_classes, Chans, Samples, dropoutRate,cropDistance,count_trial
     block1 = tf.keras.layers.MaxPooling2D(pool_size=(8, 1))(block1)
     block1  = tf.keras.layers.Activation(log)(block1) 
     flatten = Flatten()(block1) 
-#    block1 = tf.keras.layers.Dropout(dropoutRate)(faltten)
     dense   = tfp.python.layers.DenseFlipout(nb_classes, kernel_prior_fn=tfp.layers.default_multivariate_normal_fn, bias_prior_fn=tfp.layers.default_multivariate_normal_fn, 
                                             kernel_divergence_fn=kl_divergence_function,activation=tf.nn.softmax)(flatten) 
     return Model(inputs=input_main, outputs=dense)
@@ -93,7 +91,6 @@ def SCNBayesianTL(nb_classes, Chans, Samples, dropoutRate,cropDistance,count_tri
     block1 = tf.keras.layers.MaxPooling2D(pool_size=(8, 1))(block1)
     block1  = tf.keras.layers.Activation(log)(block1) 
     flatten = Flatten()(block1) 
-  #  block1 = tf.keras.layers.Dropout(dropoutRate)(flatten)
     dense   = tfp.python.layers.DenseFlipout(nb_classes,kernel_prior_fn=default_multivariate_normal_fn3, bias_prior_fn=default_multivariate_normal_fn4,
                                               kernel_divergence_fn=kl_divergence_function,activation=tf.nn.softmax)(flatten) 
     return Model(inputs=input_main, outputs=dense)
@@ -154,7 +151,7 @@ def default_multivariate_normal_fn4(dtype, shape, name, trainable,
       
     bias_layer3=tf.convert_to_tensor(weights_layer33[1],tf.float32)
     z=np.abs(weights_layer33[1])
-    bias_var3=0.1*z
+    bias_var3=0.1*z   # variance equal to 0.1*abs(weight)
     
    
     dist = normal_lib.Normal(
