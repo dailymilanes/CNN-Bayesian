@@ -10,7 +10,7 @@ import keras.utils
 import random as random
 import keras.metrics
 import pandas as pd
-import eegUtils
+import eegBayesianUtils
 import modelBayesian
 import scipy.io as sio
 from sklearn.model_selection import StratifiedKFold, RepeatedStratifiedKFold
@@ -92,8 +92,7 @@ def trainBayesian(datalist,labelslist, subject, seed, exp, exclude = 0, cropDist
 # This function prepares a intra subject training for Experiment #2. The number of repetitions is now 16, each one with a different seed
    
 def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 1000):
-     
-    
+         
     if subject[0] == 'A':
        channels=22
        fraction=6
@@ -106,7 +105,7 @@ def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 10
        strLabels=['Left','Right']
       
     trainDirectory = dataDirectory + subject + '/Training/'
-    datalist, labelslist = eegUtils.load_eeg(trainDirectory,strLabels)
+    datalist, labelslist = eegBayesianUtils.load_eeg(trainDirectory,strLabels)
     
     seed=1 
     for j in range(1,17):
@@ -136,27 +135,16 @@ def interSubjectTrain(dropoutRate=0.5, cropDistance = 50, cropSize = 1000,
        fraction=5
        strLabels=['Left','Right']
      start = 1  
-     if exclude == 1:
-        start = 2
-        
-     datalist, labelslist = eegUtils.load_eeg(dataDirectory + data+'0'+str(start)+'/Training/', strLabels )
-   
-     if exclude!=0:
-        datalistT, labelslistT = eegUtils.load_eeg(dataDirectory + data+'0'+str(start)+'/Evaluating/', strLabels)
-        datalist=datalist + datalistT
-        labelslist=labelslist + labelslistT  
-        
+            
+     datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + data+'0'+str(start)+'/Training/', strLabels)
+          
      for i in range(start + 1, 10):
         if (i == exclude):
             continue
-        datalistT, labelslistT = eegUtils.load_eeg(dataDirectory + data+'0'+str(i)+'/Training/', strLabels)
+        datalistT, labelslistT = eegBayesianUtils.load_eeg(dataDirectory + data+'0'+str(i)+'/Training/', strLabels)
         datalist=datalist + datalistT
         labelslist=labelslist + labelslistT 
-        if exclude!=0:
-            datalistT, labelslistT = eegUtils.load_eeg(dataDirectory + data+'0'+str(i)+'/Evaluating/', strLabels)
-            datalist=datalist + datalistT
-            labelslist=labelslist + labelslistT 
-    
+            
      seed=1              
      for j in range(1,17):
         trainBayesian(datalist, labelslist, 'All', seed, j, exclude=exclude,
@@ -172,13 +160,11 @@ def obtainWeights(subject,cropSize, dropoutRate,channels,nb_classes, seed, varia
     global weights_layer2
     global var_layer2
     global weights_layer33
-    
-    
+        
     dropoutStr = "%0.2f" % dropoutRate
 
-    classifier=SCN2(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate)  
-    classifier.load_weights(weightsDirectory+subject+'_NSE_d_'+str(dropoutStr)+'_c_'+str(2)+'_seed'+str(seed)+'_exp_'+str(seed)+'_exclude_0_weights.hdf5')
-   
+    classifier=eegBayesianUtils.createModel(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate)  
+    classifier.load_weights(weightsDirectory+subject+'_d_'+str(dropoutStr)+'_c_'+str(2)+'_seed'+str(seed)+'_exp_'+str(seed)+'_exclude_0_weights.hdf5')
     layer=classifier.get_layer(name='TimeConv')
     weights_layer11=layer.get_weights()
     weights_layer1 = tf.convert_to_tensor(weights_layer11,tf.float32)
