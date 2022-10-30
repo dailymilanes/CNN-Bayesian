@@ -60,15 +60,15 @@ def Evaluate(subject, cropDistance, cropSize, model, datadirectory, weightsDirec
          test_data, test_labels = eeg.Bayesian.Utils.makeNumpys1(datalist, labelslist, cropDistance, cropSize, nb_classes, test_indices)
          if model==MCD:
             classifier=modelBayesian.createModel(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
-            classifier.load_weights(weightsDirectory + subject+'_SE_'+model+'_d_'+droputStr +'_c_'+str(2)+'_seed' +str(i)+'_exp_'+ str(i)+'_no_drop_weights.hdf5')
+            classifier.load_weights(weightsDirectory + subject+ '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(seed)+'_exp_'+str(repeat)+'_exclude_'+str(exclude)+'_weights.hdf5')
             prediction_mc_after =[classifier(test_data, training=True) for _ in range(50)]
          elif model==moped:
             classifier=modelBayesian.SCNBayesianTL(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
-            classifier.load_weights(weightsDirectory + subject+'_SE_Bayesian'+model+'_d_'+droputStr +'_c_'+str(2)+'_seed' +str(i)+'_exp_'+ str(i)+'_no_drop_weights.hdf5')
+            classifier.load_weights(weightsDirectory + subject+'_Bayesian_'+model+'_d_'+droputStr +'_c_'+str(2)+'_seed' +str(i)+'_exp_'+ str(i)+'_no_drop_weights.hdf5')
             prediction_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
          else:
             classifier=modelBayesian.SCNBayesian(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
-            classifier.load_weights(weightsDirectory + subject+'_SE_Bayesian'+model+'_d_'+droputStr +'_c_'+str(2)+'_seed' +str(i)+'_exp_'+ str(i)+'_no_drop_weights.hdf5')
+            classifier.load_weights(weightsDirectory + subject+'_Bayesian_'+model+'_d_'+droputStr +'_c_'+str(2)+'_seed' +str(i)+'_exp_'+ str(i)+'_no_drop_weights.hdf5')
             prediction_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
             
          prediction_mc_after = np.array(prediction_mc_after)
