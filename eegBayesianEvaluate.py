@@ -33,7 +33,7 @@ from tensorflow_probability.python.distributions import normal as normal_lib
 import eegBayesianUtils
 import modelBayesian
 
-def Evaluate(subject, cropDistance, cropSize, model, datadirectory, weightsDirectory):
+def Evaluate(subject, cropDistance, cropSize, model, datadirectory, weightsFileName):
          
     if  subject[0] == 'A':
         nb_classes=4
@@ -58,17 +58,17 @@ def Evaluate(subject, cropDistance, cropSize, model, datadirectory, weightsDirec
               
       for train_indices, test_indices in cv.split(pseudoTrialList, pseudolabelList): 
          test_data, test_labels = eeg.Bayesian.Utils.makeNumpys1(datalist, labelslist, cropDistance, cropSize, nb_classes, test_indices)
-         if model==MCD:
+         if model=='MCD':
             classifier=modelBayesian.createModel(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
-            classifier.load_weights(weightsDirectory + subject+ '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(seed)+'_exp_'+str(repeat)+'_exclude_'+str(exclude)+'_weights.hdf5')
+            classifier.load_weights(weightsFileName)
             prediction_mc_after =[classifier(test_data, training=True) for _ in range(50)]
-         elif model==moped:
+         elif model=='MOPED':
             classifier=modelBayesian.SCNBayesianTL(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
-            classifier.load_weights(weightsDirectory + subject+'_Bayesian_'+model+'_d_'+droputStr +'_c_'+str(2)+'_seed' +str(i)+'_exp_'+ str(i)+'_no_drop_weights.hdf5')
+            classifier.load_weights(weightsFileName)
             prediction_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
          else:
             classifier=modelBayesian.SCNBayesian(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
-            classifier.load_weights(weightsDirectory + subject+'_Bayesian_'+model+'_d_'+droputStr +'_c_'+str(2)+'_seed' +str(i)+'_exp_'+ str(i)+'_no_drop_weights.hdf5')
+            classifier.load_weights(weightsFileName)
             prediction_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
             
          prediction_mc_after = np.array(prediction_mc_after)
@@ -81,7 +81,7 @@ def Evaluate(subject, cropDistance, cropSize, model, datadirectory, weightsDirec
       np.save(weightsDirectory+'tensor_'+subject+'_Bayesian_'+ model+'_'+ type_training+ '_seed_'+str(i)+'_sin_drop_after.npy', tensor_mc_after, allow_pickle=False)  
         
         
-def Validation(subject, cropDistance, cropSize, model, datadirectory, weightsDirectory):
+def Validation(subject, cropDistance, cropSize, model, datadirectory, weightsFileName):
          
     if  subject[0] == 'A':
         nb_classes=4
