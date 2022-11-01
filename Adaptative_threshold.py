@@ -31,57 +31,7 @@ def adaptative_threshold(subject, ):
     ua_mobiny=np.zeros(len(threshold))
     mobiny_result=np.zeros([16,4])   # 16 amount of seeds, and 4 groups, cc, ci, ic, ii
     for n in range(1,17):   
-       cv = StratifiedKFold(n_splits = folds, random_state=n, shuffle=True)
-       pseudoTrialList = range(len(datalist))
-       pseudolabelList = np.array(labelslist)
-       for train_indices, test_indices in cv.split(pseudoTrialList, pseudolabelList): 
-         break  
-       labelslist=np.array(labelslist)
-       text_label= labelslist[test_indices]
-       label=np.repeat(text_label,int(math.ceil((1125-cropSize)/cropDistance)))
-       label=label.reshape(len(text_label),int(math.ceil((1125-cropSize)/cropDistance)))   
-       tensor_val=eegBayesianEvaluate.Validation(subject, cropDistance, cropSize, model, datadirectory, weightsDirectory, seed=n)
-       mean=np.mean(tensor_val, axis=0)  
-       y=np.argmax(mean, axis=-1)
-       true=1*(y==label)    
-       list_true=true.reshape(len(test_indices)*int(math.ceil((1125-cropSize)/cropDistance)))
-        
-       goods_list=np.where(list_true==True)
-       bads_list=np.where(list_true==False)
-       goods=np.sum(list_true==True)
-       bads=np.sum(list_true==False)
-        
-       dif=np.zeros(50) 
-       desv=np.zeros((len(test_indices),int(math.ceil((1125-cropSize)/cropDistance))))
-       mean_dif=np.zeros((len(test_indices),int(math.ceil((1125-cropSize)/cropDistance))))
-       test=np.zeros((len(test_indices),int(math.ceil((1125-cropSize)/cropDistance))))
-       entropy=st.entropy(mean,base=2,axis=-1)/np.log2(nb_classes)
-       for m in threshold:
-          ciertos_good=0
-          ciertos_bad=0
-          inciertos_good=0
-          inciertos_bad=0
-          for i in range(len(test_indices)):
-            for j in range(int(math.ceil((1125-cropSize)/cropDistance))): 
-                if entropy[i,j]<m:
-                     test[i,j]=True
-                     if true[i,j]==True:
-                         ciertos_good=ciertos_good + 1
-                     else:
-                         ciertos_bad=ciertos_bad+1
-                else:
-                       test[i,j]=False
-                       if true[i,j]==True:
-                         inciertos_good=inciertos_good + 1
-                       else:
-                         inciertos_bad=inciertos_bad+1
-                   
-          ua_mobiny[ind1]=(ciertos_good+inciertos_bad)/(ciertos_good+ciertos_bad+inciertos_good+inciertos_bad)*100
-          ind1=ind1+1
-       max=np.argmax(ua_mobiny, axis=-1)
-
-            # Now, we determinate the UA from optimal threshold selected over validation set
-       tensor_test=eegBayesianEvaluate.Evaluation(subject, cropDistance, cropSize, model, datadirectory, weightsDirectory, seed=n) 
+       tensor_test=eegBayesianEvaluate.Evaluation(subject, cropDistance, cropSize, model, datalist1, weightsDirectory, seed=n) 
        labelslist1=np.array(labelslist1)
        label=np.repeat(labelslist1,int(math.ceil((1125-cropSize)/cropDistance)))
        label=label.reshape(len(datalist1),int(math.ceil((1125-cropSize)/cropDistance)))   # label is a matrix of len(datalist1)x63
@@ -89,30 +39,94 @@ def adaptative_threshold(subject, ):
        y=np.argmax(mean, axis=-1)
        true=1*(y==label)
        test=np.zeros((len(datalist1),int(math.ceil((1125-cropSize)/cropDistance))))
-       entropy=st.entropy(mean,base=2,axis=-1)/np.log2(nb_classes)
        ciertos_good=0
        ciertos_bad=0
        inciertos_good=0
        inciertos_bad=0
-       for i in range(len(datalist1)):
-          for j in range(int(math.ceil((1125-cropSize)/cropDistance))): 
-              if entropy[i,j] < max/len(threshold)+0.05:
-                 test[i,j]=True
-                 if true[i,j]==True:
-                     ciertos_good=ciertos_good + 1
-                 else:
-                      ciertos_bad=ciertos_bad+1
-              else:
-                 test[i,j]=False
-                 if true[i,j]==True:
-                     inciertos_good=inciertos_good + 1
-                 else:
-                     inciertos_bad=inciertos_bad+1
-       
-       mobiny_result[ind2,0]=ciertos_good
-       mobiny_result[ind2,1]=inciertos_good
-       mobiny_result[ind2,2]=ciertos_bad
-       mobiny_result[ind2,3]=inciertos_bad
-       ind2==ind2+1    
-    ua_result=(np.sum(mobiny_result[:,0])+np.sum(mobiny_result[:,3]))/(np.sum(mobiny_result[:,0])+np.sum(mobiny_result[:,1])+np.sum(mobiny_result[:,2])+np.sum(mobiny_result[:,3]))*100   
-    return ua_result           
+       dif=np.zeros(50) 
+       a=np.zeros(50)
+       desv=np.zeros((len(datalist),63))
+       mean_dif=np.zeros((len(datalist),63))
+       ztest_99=np.zeros((len(datalist),63))
+       ztest_95=np.zeros((len(datalist),63))
+       value_ztest_95=np.zeros((len(datalist),63))
+       value_ztest_99=np.zeros((len(datalist),63))
+       for i in range(len(datalist)):
+            for j in range(int(math.ceil((1125-cropSize)/cropDistance))):
+                mean_max=np.argmax(mean[i,j,:])       #indice del maximo de las medias x clase
+                mean_entropy=st.entropy(mean[i,j,:],base=2,axis=-1)  # la entropia de la media
+                for k in range(50):
+                    a[k]=np.argmax(tensor_test[k,i,j])
+                    indexs=np.argsort(-1*tensor_test[k,i,j,:])    #indices de las salidas ordenadas de mayor a menor valor
+                    if indexs[0]==mean_max:
+                        dif[k]=tensor_test[k,i,j,mean_max]-tensor_test[k,i,j,indexs[1]]
+                    else:
+                        dif[k]=tensor_test[k,i,j,mean_max]-tensor_test[k,i,j,indexs[0]]
+                         
+            
+                desv[i,j]=np.std(dif)
+                mean_dif[i,j]=np.mean(dif)
+                
+           # New_test with 99% of confidence level (2.326)
+                if mean_dif[i,j]>desv[i,j]*2.326/math.sqrt(50):
+                   ztest_99[i,j]=True
+                   value_ztest_99[i,j]=mean_dif[i,j]-desv[i,j]*2.326/math.sqrt(50)
+               
+                else:
+                   ztest_99[i,j]=False
+                   value_ztest_99[i,j]=mean_dif[i,j]-desv[i,j]*2.326/math.sqrt(50)
+               
+           # New_test with 95% of confidence level (1.645)
+                if mean_dif[i,j]>desv[i,j]*1.645/math.sqrt(50):
+                   ztest_95[i,j]=True
+                   value_ztest_95[i,j]=mean_dif[i,j]-desv[i,j]*1.645/math.sqrt(50)
+                else:
+                   ztest_95[i,j]=False
+                   value_ztest_95[i,j]=mean_dif[i,j]-desv[i,j]*1.645/math.sqrt(50)
+               
+       value_ztest_95_list=value_ztest_95.reshape(len(datalist)*63)
+       ztest_95_list=ztest_95.reshape(len(datalist)*63)
+       value_ztest_99_list=value_ztest_99.reshape(len(datalist)*63)
+       ztest_99_list=ztest_99.reshape(len(datalist)*63)
+        
+       for i in range(len(list_true)):
+            if list_true[i]== True:
+                if ztest_95_list[i]== True :
+                    ciertos_good_95=ciertos_good_95 + 1
+                else:
+                    inciertos_good_95=inciertos_good_95 + 1
+             
+                if ztest_99_list[i]== True :
+                    ciertos_good_99=ciertos_good_99 + 1
+                else:
+                    inciertos_good_99=inciertos_good_99 + 1   
+             
+            else:
+                if ztest_95_list[i]== True :
+                    ciertos_bad_95= ciertos_bad_95 + 1            
+             
+                else:
+                    inciertos_bad_95 = inciertos_bad_95 + 1
+             
+                if ztest_99_list[i]== True :
+                    ciertos_bad_99= ciertos_bad_99 + 1            
+             
+                else:
+                    inciertos_bad_99 = inciertos_bad_99 + 1     
+        
+        resultados_95[ind,0]=ciertos_good_95
+        resultados_95[ind,1]=inciertos_good_95
+        resultados_95[ind,2]=ciertos_bad_95
+        resultados_95[ind,3]=inciertos_bad_95
+   
+        resultados_99[ind,0]=ciertos_good_99
+        resultados_99[ind,1]=inciertos_good_99
+        resultados_99[ind,2]=ciertos_bad_99
+        resultados_99[ind,3]=inciertos_bad_99
+        ind=ind+1
+     
+   ua_result=(np.sum(mobiny_result[:,0])+np.sum(mobiny_result[:,3]))/(np.sum(mobiny_result[:,0])+np.sum(mobiny_result[:,1])+np.sum(mobiny_result[:,2])+np.sum(mobiny_result[:,3]))*100   
+   rcc
+   rcu
+   rc
+   return ua_result           
