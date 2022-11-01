@@ -29,7 +29,9 @@ def mobiny method(subject, ):
     datalist1, labelslist1 = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Evaluating/', ['Left','Right','Foot','Tongue'])
     threshold=np.arange(0.05,1.05,0.05)
     ind1=0
+    ind2=0
     ua_mobiny=np.zeros(len(threshold))
+    mobiny_result=np.zeros([16,4])   # 16 amount of seeds, and 4 groups, cc, ci, ic, ii
     for n in range(1,17):   
        cv = StratifiedKFold(n_splits = folds, random_state=n, shuffle=True)
        pseudoTrialList = range(len(datalist))
@@ -76,7 +78,7 @@ def mobiny method(subject, ):
                        else:
                          inciertos_bad=inciertos_bad+1
                    
-          ua_mobiny[ind1]=(ciertos_good+inciertos_bad)/(ciertos_good+ciertos_bad+inciertos_good+inciertos_bad)
+          ua_mobiny[ind1]=(ciertos_good+inciertos_bad)/(ciertos_good+ciertos_bad+inciertos_good+inciertos_bad)*100
           ind1=ind1+1
        max=np.argmax(ua_mobiny, axis=-1)
 
@@ -84,7 +86,7 @@ def mobiny method(subject, ):
        tensor_test=eegBayesianEvaluate.Evaluation(subject, cropDistance, cropSize, model, datadirectory, weightsDirectory, seed=n) 
        labelslist1=np.array(labelslist1)
        label=np.repeat(labelslist1,int(math.ceil((1125-cropSize)/cropDistance)))
-       label=label.reshape(len(datalist1),int(math.ceil((1125-cropSize)/cropDistance)))   # label is a matrix 288x63
+       label=label.reshape(len(datalist1),int(math.ceil((1125-cropSize)/cropDistance)))   # label is a matrix of len(datalist1)x63
        mean=np.mean(tensor_test, axis=0)  
        y=np.argmax(mean, axis=-1)
        true=1*(y==label)
@@ -114,6 +116,7 @@ def mobiny method(subject, ):
        mobiny_result[ind2,2]=ciertos_bad
        mobiny_result[ind2,3]=inciertos_bad
        ind2==ind2+1    
+    ua_result=(np.sum(mobiny_result[:,0])+np.sum(mobiny_result[:,3]))/(np.sum(mobiny_result[:,0])+np.sum(mobiny_result[:,1])+np.sum(mobiny_result[:,2])+np.sum(mobiny_result[:,3]))*100   
                
    
     
