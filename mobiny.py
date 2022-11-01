@@ -11,7 +11,7 @@ import scipy.io as sio
 from sklearn.model_selection import StratifiedKFold
 import eegBayesianEvaluate
 
-def mobiny method(subject, ):
+def mobiny_method(subject, ):
     if  subject[0] == 'A':
         nb_classes=4
         channels=22
