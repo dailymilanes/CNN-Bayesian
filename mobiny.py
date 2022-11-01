@@ -117,7 +117,7 @@ def mobiny_method(subject, ):
        mobiny_result[ind2,3]=inciertos_bad
        ind2==ind2+1    
     ua_result=(np.sum(mobiny_result[:,0])+np.sum(mobiny_result[:,3]))/(np.sum(mobiny_result[:,0])+np.sum(mobiny_result[:,1])+np.sum(mobiny_result[:,2])+np.sum(mobiny_result[:,3]))*100   
-               
+    return ua_result           
    
     
     
