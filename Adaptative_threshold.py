@@ -28,6 +28,8 @@ def adaptative_threshold(subject, model, ):
     
     datalist1, labelslist1 = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Evaluating/', ['Left','Right','Foot','Tongue'])
     ind=0
+    result_95=np.zeros([16,4])
+    result_99=np.zeros([16,4])
     for n in range(1,17):   
        tensor_test=eegBayesianEvaluate.Evaluation(subject, cropDistance, cropSize, model, datalist1, weightsDirectory, seed=n) 
        labelslist1=np.array(labelslist1)
@@ -37,10 +39,10 @@ def adaptative_threshold(subject, model, ):
        y=np.argmax(mean, axis=-1)
        true=1*(y==label)
        test=np.zeros((len(datalist1),int(math.ceil((1125-cropSize)/cropDistance))))
-       ciertos_good=0
-       ciertos_bad=0
-       inciertos_good=0
-       inciertos_bad=0
+       certain_good=0
+       certain_bad=0
+       uncertain_good=0
+       uncertain_bad=0
        dif=np.zeros(50) 
        a=np.zeros(50)
        desv=np.zeros((len(datalist),int(math.ceil((1125-cropSize)/cropDistance))))
@@ -88,41 +90,45 @@ def adaptative_threshold(subject, model, ):
        for i in range(len(list_true)):
             if list_true[i]== True:
                 if ztest_95_list[i]== True :
-                    ciertos_good_95=ciertos_good_95 + 1
+                    certain_good_95=certain_good_95 + 1
                 else:
-                    inciertos_good_95=inciertos_good_95 + 1
+                    uncertain_good_95=uncertain_good_95 + 1
              
                 if ztest_99_list[i]== True :
-                    ciertos_good_99=ciertos_good_99 + 1
+                    certain_good_99=certain_good_99 + 1
                 else:
-                    inciertos_good_99=inciertos_good_99 + 1   
+                    uncertain_good_99=uncertain_good_99 + 1   
              
             else:
                 if ztest_95_list[i]== True :
-                    ciertos_bad_95= ciertos_bad_95 + 1            
+                    certain_bad_95= certain_bad_95 + 1            
              
                 else:
-                    inciertos_bad_95 = inciertos_bad_95 + 1
+                    uncertain_bad_95 = uncertain_bad_95 + 1
              
                 if ztest_99_list[i]== True :
-                    ciertos_bad_99= ciertos_bad_99 + 1            
+                    certain_bad_99= certain_bad_99 + 1            
              
                 else:
-                    inciertos_bad_99 = inciertos_bad_99 + 1     
+                    uncertain_bad_99 = uncertain_bad_99 + 1     
         
-       resultados_95[ind,0]=ciertos_good_95
-       resultados_95[ind,1]=inciertos_good_95
-       resultados_95[ind,2]=ciertos_bad_95
-       resultados_95[ind,3]=inciertos_bad_95
+       result_95[ind,0]=certain_good_95
+       result_95[ind,1]=uncertain_good_95
+       result_95[ind,2]=certain_bad_95
+       result_95[ind,3]=uncertain_bad_95
    
-       resultados_99[ind,0]=ciertos_good_99
-       resultados_99[ind,1]=inciertos_good_99
-       resultados_99[ind,2]=ciertos_bad_99
-       resultados_99[ind,3]=inciertos_bad_99
+       result_99[ind,0]=certain_good_99
+       result_99[ind,1]=uncertain_good_99
+       result_99[ind,2]=certain_bad_99
+       result_99[ind,3]=uncertain_bad_99
        ind=ind+1
-   rc=(np.sum(resultados_95[:,0])+np.sum(resultados_95[:,2]))/(np.sum(resultados_95[:,0])+np.sum(resultados_95[:,1])+np.sum(resultados_95[:,2])+np.sum(resultados_95[:,3]))*100  
-   rcc=np.sum(resultados_95[:,0])/(np.sum(resultados_95[:,0])+np.sum(resultados_95[:,2]))*100  
-   rcu 
-   ua=(np.sum(resultados_95[:,0])+np.sum(resultados_95[:,3]))/(np.sum(resultados_95[:,0])+np.sum(resultados_95[:,1])+np.sum(resultados_95[:,2])+np.sum(resultados_95[:,3]))*100   
-   
-   return ua_result           
+    rc_95=(np.sum(result_95[:,0])+np.sum(result_95[:,2]))/(np.sum(result_95[:,0])+np.sum(result_95[:,1])+np.sum(result_95[:,2])+np.sum(result_95[:,3]))*100  
+    rcc_95=np.sum(result_95[:,0])/(np.sum(result_95[:,0])+np.sum(result_95[:,2]))*100  
+    rcu_95=np.sum(result_95[:,1])/(np.sum(result_95[:,1])+np.sum(result_95[:,3]))*100     
+    ua_95=(np.sum(result_95[:,0])+np.sum(result_95[:,3]))/(np.sum(result_95[:,0])+np.sum(result_95[:,1])+np.sum(result_95[:,2])+np.sum(result_95[:,3]))*100  
+    
+    rc_99=(np.sum(result_99[:,0])+np.sum(result_99[:,2]))/(np.sum(result_99[:,0])+np.sum(result_99[:,1])+np.sum(result_99[:,2])+np.sum(result_99[:,3]))*100  
+    rcc_99=np.sum(result_99[:,0])/(np.sum(result_99[:,0])+np.sum(result_99[:,2]))*100  
+    rcu_99=np.sum(result_99[:,1])/(np.sum(result_99[:,1])+np.sum(result_99[:,3]))*100     
+    ua_99=(np.sum(result_99[:,0])+np.sum(result_99[:,3]))/(np.sum(result_99[:,0])+np.sum(result_99[:,1])+np.sum(result_99[:,2])+np.sum(result_99[:,3]))*100 
+    return rc_95, rcc_95, rcu_95, ua_95           
