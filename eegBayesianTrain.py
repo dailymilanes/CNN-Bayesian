@@ -51,16 +51,16 @@ def trainBayesian(datalist,labelslist, subject, seed, cropDistance = 2, cropSize
     
     for train_indices, val_indices in cv.split(pseudoTrialList, pseudolabelList):
         
-        baseFileName= weightsDirectory+subject+'_Bayesian_'+ model+'_'+ type_training+ '_seed_'+str(i)
-        weightFileName=baseFileName +'_weights.hdf5' 
+        baseFileName= weightsDirectory + subject + '_Bayesian_' + model+'_' + type_training + '_seed_'+str(i)
+        weightFileName=baseFileName + '_weights.hdf5' 
         count_trial= len(train_indices)
         if model='MOPED':  
           obtainWeights(subject,cropSize=cropSize, dropoutRate=dropoutRate,channels = channels,nb_classes=nb_classes, seed=seed)  
-          classifier = eegBayesianUtils.SCNBayesianTL(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
+          classifier = modelBayesian.SCNBayesianTL(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
           file = baseFileName+'_with_prior_var_0.1_no_drop.json'
         else:
-          classifier = eegBayesianUtils.SCNBayesian(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
+          classifier = modelBayesian.SCNBayesian(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
           file = baseFileName+'_no_prior_no_drop.json'
          
@@ -75,11 +75,11 @@ def trainBayesian(datalist,labelslist, subject, seed, cropDistance = 2, cropSize
         gen1 = eegBayesianUtils.Generator(datalist, labelslist, nb_classes, train_indices, channels, cropDistance, cropSize, int(math.ceil((1125-cropSize)/cropDistance)))
         gen2 = eegBayesianUtils.Generator(datalist, labelslist, nb_classes, val_indices, channels, cropDistance, cropSize, int(math.ceil((1125-cropSize)/cropDistance)))
         
-        pasosxepocaT=int((len(train_indices)*int(math.ceil((1125-cropSize)/cropDistance)))/32)
-        pasosxepocaV= int((len(val_indices)*int(math.ceil((1125-cropSize)/cropDistance)))/32)
+        stepxepochT=int((len(train_indices)*int(math.ceil((1125-cropSize)/cropDistance)))/32)
+        stepxepochV= int((len(val_indices)*int(math.ceil((1125-cropSize)/cropDistance)))/32)
        
-        history = classifier.fit(gen1, steps_per_epoch=pasosxepocaT, epochs = 1000, verbose = 1, 
-                                       validation_data = gen2, validation_steps=pasosxepocaV, callbacks=[callback1, callback2, callback3])
+        history = classifier.fit(gen1, steps_per_epoch=stepxepochT, epochs = 1000, verbose = 1, 
+                                       validation_data = gen2, validation_steps=stepxepochV, callbacks=[callback1, callback2, callback3])
         hist_df = pd.DataFrame(history.history)
         with open(file,mode='w') as f:
              hist_df.to_json(f)
@@ -90,18 +90,20 @@ def trainBayesian(datalist,labelslist, subject, seed, cropDistance = 2, cropSize
     
 # This function prepares a intra subject training for Experiment #2. The number of repetitions is now 16, each one with a different seed
    
-def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 1000, model='MOPED'):
+def intraSubjectTrain(subject, cropDistance = 50, cropSize = 1000, model='MOPED'):
          
     if subject[0] == 'A':
        channels=22
        fraction=6
        nb_classes=4
        strLabels=['Left','Right', 'Foot', 'Tongue']
+       dropoutRate=0.8  
     elif subject[0] == 'B':
        channels=3
        fraction=5
        nb_classes=2
        strLabels=['Left','Right']
+       dropoutRate=0.5
       
     trainDirectory = dataDirectory + subject + '/Training/'
     datalist, labelslist = eegBayesianUtils.load_eeg(trainDirectory,strLabels)
@@ -116,18 +118,20 @@ def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 10
 # If the experiment is #3 exclude=0, and all data training for all subjects are load
 # If experiment #4, exclude different of 0 and all data training and evaluating for all subjects except exclude subject are load
   
-def interSubjectTrain(dropoutRate=0.5, cropDistance = 50, cropSize = 1000, nb_classes = 4, model='MOPED'):
+def interSubjectTrain(cropDistance = 50, cropSize = 1000, nb_classes = 4, model='MOPED'):
       
      if nb_classes==4:
        data='A'
        channels=22
        fraction=6
        strLabels=['Left','Right', 'Foot', 'Tongue']
+       dropoutRate=0.8
      elif nb_classes==2:
        data='B'
        channels=3
        fraction=5
        strLabels=['Left','Right']
+       dropoutRate=0.5
      start = 1  
             
      datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + data+'0'+str(start)+'/Training/', strLabels)
@@ -154,8 +158,9 @@ def obtainWeights(subject,cropSize, dropoutRate,channels,nb_classes, seed, varia
         
     dropoutStr = "%0.2f" % dropoutRate
 
-    classifier=eegBayesianUtils.createModel(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate)  
-    classifier.load_weights(weightsDirectory+subject+ '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(seed)+'_exp_'+str(repeat)+'_exclude_'+str(exclude)+'_weights.hdf5')
+    classifier=modelBayesian.createModel(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate)  
+    # Load deterministic weights from the pretained model: please review the weight file name, por example: 'A01_d_0.80_c_2_seed_1_weights.hdf5'  
+    classifier.load_weights(weightsDirectory+subject+ '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(seed)+'_weights.hdf5')
     layer=classifier.get_layer(name='TimeConv')
     weights_layer11=layer.get_weights()
     weights_layer1 = tf.convert_to_tensor(weights_layer11,tf.float32)
