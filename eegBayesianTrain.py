@@ -59,7 +59,7 @@ def trainBayesian(datalist,labelslist, subject, seed, cropDistance = 2, cropSize
           classifier = modelBayesian.SCNBayesianTL(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
           file = baseFileName+'_with_prior_var_0.1_no_drop.json'
-        else:
+        elif model='NORMAL': 
           classifier = modelBayesian.SCNBayesian(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
           file = baseFileName+'_no_prior_no_drop.json'
@@ -149,7 +149,7 @@ def interSubjectTrain(cropDistance = 50, cropSize = 1000, nb_classes = 4, model=
         
 
 # function to inicializate the prior from deterministic weights
-def obtainWeights(subject,cropSize, dropoutRate,channels,nb_classes, seed, varianza=0.1):
+def obtainWeights(subject,cropSize, dropoutRate,channels,nb_classes, seed, variance=0.1):
     global weights_layer1
     global var_layer1
     global weights_layer2
@@ -165,14 +165,14 @@ def obtainWeights(subject,cropSize, dropoutRate,channels,nb_classes, seed, varia
     weights_layer11=layer.get_weights()
     weights_layer1 = tf.convert_to_tensor(weights_layer11,tf.float32)
     z=np.abs(weights_layer11)
-    var_layer1=varianza*z
+    var_layer1=variance*z
     print(weights_layer1.shape)
      
     layer=classifier.get_layer(name='ChannelConv')
     weights_layer22=layer.get_weights()
     weights_layer2 = tf.convert_to_tensor(weights_layer22,tf.float32)
     z=np.abs(weights_layer22)
-    var_layer2=varianza*z
+    var_layer2=variance*z
    
     layer=classifier.get_layer(name='Dense')
     weights_layer33=layer.get_weights()
