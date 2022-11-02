@@ -39,8 +39,8 @@ weightsDirectory = ''
 #nb_classes:Number of classes, for dataset 2a are 4, for dataset 2b are 2.
 
 
-def trainBayesian(datalist,labelslist, subject, seed, exp, exclude = 0, cropDistance = 2, cropSize = 1000, 
-                  dropoutRate = 0.8, fraction = 6, channels = 22, nb_classes = 4, varianza=0.1, model='MOPED', type_training='SE'):
+def trainBayesian(datalist,labelslist, subject, seed, cropDistance = 2, cropSize = 1000, 
+                  dropoutRate = 0.8, fraction = 6, channels = 22, nb_classes = 4, model='MOPED', type_training='SE'):
     
         
     droputStr = "%0.2f" % dropoutRate    
@@ -50,21 +50,19 @@ def trainBayesian(datalist,labelslist, subject, seed, exp, exclude = 0, cropDist
     
     for train_indices, val_indices in cv.split(pseudoTrialList, pseudolabelList):
         
-        baseFileName= weightsDirectory_output+subject+'_Bayesian_'+ model+'_'+ type_training+ '_seed_'+str(i)+'_sin_drop'
+        baseFileName= weightsDirectory+subject+'_Bayesian_'+ model+'_'+ type_training+ '_seed_'+str(i)
+        weightFileName=baseFileName +'_weights.hdf5' 
+        count_trial= len(train_indices)
         if model='MOPED':  
-          weightFileName=baseFileName +'_weights.hdf5'
           obtainWeights(subject,cropSize=cropSize, dropoutRate=dropoutRate,channels = channels,nb_classes=nb_classes, seed=seed)  
           classifier = SCNBayesianTL(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
-          file = baseFileName+'_with_prior_0.1_no_drop.json'
+          file = baseFileName+'_with_prior_var_0.1_no_drop.json'
         else:
-          weightFileName=baseFileName +'_no_prior_0.1_no_drop_weights.hdf5' 
           classifier = SCNBayesian(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
-          file = baseFileName+'_no_prior_0.1_no_drop.json'
-        count_trial= len(train_indices) 
-        print(count_trial)         
-              
+          file = baseFileName+'_no_prior_no_drop.json'
+         
         classifier.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = ['accuracy'])
         callback1 = tf.keras.callbacks.ModelCheckpoint(monitor='val_loss', filepath = weightFileName,
                                                    save_best_only=True,
@@ -73,8 +71,8 @@ def trainBayesian(datalist,labelslist, subject, seed, exp, exclude = 0, cropDist
         callback3 = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.33,  mode="auto", verbose=1,
                               patience=25, min_lr=0.000001) 
         
-        gen1 = Generator(datalist, labelslist, nb_classes, train_indices, channels, cropDistance, cropSize, int(math.ceil((1125-cropSize)/cropDistance)))
-        gen2 = Generator(datalist, labelslist, nb_classes, val_indices, channels, cropDistance, cropSize, int(math.ceil((1125-cropSize)/cropDistance)))
+        gen1 = eegBayesianUtils.Generator(datalist, labelslist, nb_classes, train_indices, channels, cropDistance, cropSize, int(math.ceil((1125-cropSize)/cropDistance)))
+        gen2 = eegBayesianUtils.Generator(datalist, labelslist, nb_classes, val_indices, channels, cropDistance, cropSize, int(math.ceil((1125-cropSize)/cropDistance)))
         
         pasosxepocaT=int((len(train_indices)*int(math.ceil((1125-cropSize)/cropDistance)))/32)
         pasosxepocaV= int((len(val_indices)*int(math.ceil((1125-cropSize)/cropDistance)))/32)
@@ -107,22 +105,17 @@ def intraSubjectTrain(subject, dropoutRate=0.5, cropDistance = 50, cropSize = 10
     trainDirectory = dataDirectory + subject + '/Training/'
     datalist, labelslist = eegBayesianUtils.load_eeg(trainDirectory,strLabels)
     
-    seed=1 
     for j in range(1,17):
-       trainBayesian(datalist, labelslist, subject, seed, j,
+       trainBayesian(datalist, labelslist, subject, seed=j,
                    cropDistance = cropDistance, cropSize = cropSize, 
                    dropoutRate = dropoutRate, fraction = fraction, 
                    channels = channels, nb_classes = nb_classes,model=model, type_training='SE')
-       seed=seed+1
-
-
-
+       
 # This function prepares a inter-subject training for Experiments #3 and #4. The number of repetitions is 16 
 # If the experiment is #3 exclude=0, and all data training for all subjects are load
 # If experiment #4, exclude different of 0 and all data training and evaluating for all subjects except exclude subject are load
   
-def interSubjectTrain(dropoutRate=0.5, cropDistance = 50, cropSize = 1000,
-                      nb_classes = 4,exclude = 0, moped=True):
+def interSubjectTrain(dropoutRate=0.5, cropDistance = 50, cropSize = 1000, nb_classes = 4, model='MOPED'):
       
      if nb_classes==4:
        data='A'
@@ -139,19 +132,16 @@ def interSubjectTrain(dropoutRate=0.5, cropDistance = 50, cropSize = 1000,
      datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + data+'0'+str(start)+'/Training/', strLabels)
           
      for i in range(start + 1, 10):
-        if (i == exclude):
-            continue
         datalistT, labelslistT = eegBayesianUtils.load_eeg(dataDirectory + data+'0'+str(i)+'/Training/', strLabels)
         datalist=datalist + datalistT
         labelslist=labelslist + labelslistT 
             
-     seed=1              
      for j in range(1,17):
-        trainBayesian(datalist, labelslist, 'All', seed, j, exclude=exclude,
+        trainBayesian(datalist, labelslist, subject='All', seed=j, 
                    cropDistance = cropDistance, cropSize = cropSize, 
                    dropoutRate = dropoutRate, fraction = fraction, 
                    channels = channels, nb_classes = nb_classes, model=model, type_training='NSE')
-        seed=seed+1
+        
 
 # function to inicializate the prior from deterministic weights
 def obtainWeights(subject,cropSize, dropoutRate,channels,nb_classes, seed, varianza=0.1):
