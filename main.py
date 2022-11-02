@@ -31,7 +31,7 @@ eegBayesianTrain.weightsDirectory = '../Weights/'   # Place where the weights wi
 ## To train Bayesian Neural Network models using non-subject-specific (NSE) strategy, dropout level, distance between crops, size of crops, model 'MOPED' or 'NORMAL'
 # eegBayesianTrain.interSubjectTrain(dropoutRate=0.5, cropDistance = 2, cropSize = 1000, nb_classes = 2, moped=True)  # for example to train with all subjects of dataset 2b, if dataset 2a please replace dropoutRate=0.8 and nb_classes=4
 
-# Evaluate function
+## Function to evaluate the different models: MCD, MOPED or NORMAL using 50 forward pass over testing set, and to determinate the accuracy.  
 # Specified the weightsFileName
 #weightsFileName='../Weights/B01_Seed_19_R_1_d_0.50_c_2_x_0_weights.hdf5'
 #eegEvaluate.eegEvaluate('B01', cropDistance=2, cropSize=1000, weightsFileName=weightsFileName,
