@@ -33,41 +33,56 @@ from tensorflow_probability.python.distributions import normal as normal_lib
 import eegBayesianUtils
 import modelBayesian
 
-def Evaluate(subject, cropDistance, cropSize, model, datadirectory, weightsFileName):
-         
+def Evaluate(subject, cropDistance=2, cropSize=1000, model='MCD', accuracy=True):
+        
     if  subject[0] == 'A':
         nb_classes=4
         channels=22
         dropoutRate=0.8
         folds=6
-        
+        strLabels=['Left','Right', 'Foot', 'Tongue']
     else:
         nb_classes=2
         channels=3
         dropoutRate=0.5
         folds=5
+        strLabels=['Left','Right']
         
     droputStr = "%0.2f" % dropoutRate 
         
-    datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Evaluating/', ['Left','Right','Foot','Tongue'])
+    datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Evaluating/', strLabels)
     tensor_mc_after=np.zeros((50,len(datalist),int(math.ceil((1125-cropSize)/cropDistance)),nb_classes))
+         
     for i in range(1,17):  
-      cv = StratifiedKFold(n_splits = folds, random_state=i)
+      cv = StratifiedKFold(n_splits = folds, random_state=i, shuffle=True)
       pseudoTrialList = range(len(datalist))
       pseudolabelList = np.array(labelslist)
               
       for train_indices, test_indices in cv.split(pseudoTrialList, pseudolabelList): 
-         test_data, test_labels = eeg.Bayesian.Utils.makeNumpys1(datalist, labelslist, cropDistance, cropSize, nb_classes, test_indices)
+         test_data, test_labels = eegBayesianUtils.makeNumpys1(datalist, labelslist, cropDistance, cropSize, nb_classes, test_indices)
          if model=='MCD':
             classifier=modelBayesian.createModel(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
-            classifier.load_weights(weightsFileName)
+            # Load deterministic weights from the pretained model: please review the weight file name, por example: 'A01_d_0.80_c_2_seed_1_weights.hdf5' 
+            baseFileName= weightsDirectory + subject + '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(i) 
+            weightFileName=baseFileName + '_weights.hdf5'
+            classifier.load_weights(weightFileName)
             prediction_mc_after =[classifier(test_data, training=True) for _ in range(50)]
+                  
          elif model=='MOPED':
             classifier=modelBayesian.SCNBayesianTL(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
+            # Load weights from the 'MOPED' model: please review the weight file name, por example: 'A01_Bayesian_MOPED_SE_d_0.80_c_2_seed_1_weights.hdf5'  
+            # If non-subject-specific, subject='All'      
+            baseFileName= weightsDirectory + subject + '_Bayesian_MOPED_' + type_training + '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(i) 
+            weightFileName=baseFileName + '_weights.hdf5' 
             classifier.load_weights(weightsFileName)
             prediction_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
+                  
          else:
             classifier=modelBayesian.SCNBayesian(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
+             # Load weights from the 'NORMAL' model: please review the weight file name, por example: 'A01_Bayesian_NORMAL_SE_d_0.80_c_2_seed_1_weights.hdf5' 
+             # If non-subject-specific, subject='All'
+            baseFileName= weightsDirectory + subject + '_Bayesian_NORMAL_' + type_training + '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(i) 
+            weightFileName=baseFileName + '_weights.hdf5' 
             classifier.load_weights(weightsFileName)
             prediction_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
             
@@ -91,42 +106,55 @@ def Validation(subject, cropDistance, cropSize, model, datadirectory, weightsFil
         channels=22
         dropoutRate=0.8
         folds=6
-        
+        strLabels=['Left','Right', 'Foot', 'Tongue']
     else:
         nb_classes=2
         channels=3
         dropoutRate=0.5
         folds=5
+        strLabels=['Left','Right']
         
     droputStr = "%0.2f" % dropoutRate 
         
     datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Training/', ['Left','Right','Foot','Tongue'])
-    tensor_mc_after=np.zeros((50,len(datalist),int(math.ceil((1125-cropSize)/cropDistance)),nb_classes))
+    tensor_mc_after=np.zeros((50,len(datalist)/folds,int(math.ceil((1125-cropSize)/cropDistance)),nb_classes))
     for i in range(1,17):  
-      cv = StratifiedKFold(n_splits = folds, random_state=i)
+      cv = StratifiedKFold(n_splits = folds, random_state=i, shuffle=True)
       pseudoTrialList = range(len(datalist))
       pseudolabelList = np.array(labelslist)
               
       for train_indices, test_indices in cv.split(pseudoTrialList, pseudolabelList): 
-         test_data, test_labels = eeg.Bayesian.Utils.makeNumpys1(datalist, labelslist, cropDistance, cropSize, nb_classes, test_indices)
-         if model==MCD:
+         test_data, test_labels = eegBayesianUtils.makeNumpys1(datalist, labelslist, cropDistance, cropSize, nb_classes, test_indices)
+         if model=='MCD':
             classifier=modelBayesian.createModel(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
-            classifier.load_weights(weightsDirectory + subject+ '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(seed)+'_exp_'+str(repeat)+'_exclude_'+str(exclude)+'_weights.hdf5')
-            prediction_mc_after =[classifier(test_data, training=True) for _ in range(50)]
-         elif model==moped:
+            # Load deterministic weights from the pretained model: please review the weight file name, por example: 'A01_d_0.80_c_2_seed_1_weights.hdf5' 
+            baseFileName= weightsDirectory + subject + '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(i) 
+            weightFileName=baseFileName + '_weights.hdf5'
+            classifier.load_weights(weightFileName)
+            tensor_mc_after =[classifier(test_data, training=True) for _ in range(50)]
+                  
+         elif model=='MOPED':
             classifier=modelBayesian.SCNBayesianTL(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
-            classifier.load_weights(weightsDirectory + subject+'_Bayesian_'+model+'_d_'+droputStr +'_c_'+str(2)+'_seed' +str(i)+'_exp_'+ str(i)+'_no_drop_weights.hdf5')
-            prediction_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
+            # Load weights from the 'MOPED' model: please review the weight file name, por example: 'A01_Bayesian_MOPED_SE_d_0.80_c_2_seed_1_weights.hdf5'  
+            # If non-subject-specific, subject='All'      
+            baseFileName= weightsDirectory + subject + '_Bayesian_MOPED_' + type_training + '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(i) 
+            weightFileName=baseFileName + '_weights.hdf5' 
+            classifier.load_weights(weightsFileName)
+            tensor_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
+                  
          else:
             classifier=modelBayesian.SCNBayesian(nb_classes = nb_classes,Chans = channels,Samples = cropSize,dropoutRate=dropoutRate, cropDistance=cropDistance)  
-            classifier.load_weights(weightsDirectory + subject+'_Bayesian_'+model+'_d_'+droputStr +'_c_'+str(2)+'_seed' +str(i)+'_exp_'+ str(i)+'_no_drop_weights.hdf5')
-            prediction_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
+             # Load weights from the 'NORMAL' model: please review the weight file name, por example: 'A01_Bayesian_NORMAL_SE_d_0.80_c_2_seed_1_weights.hdf5' 
+             # If non-subject-specific, subject='All'
+            baseFileName= weightsDirectory + subject + '_Bayesian_NORMAL_' + type_training + '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(i) 
+            weightFileName=baseFileName + '_weights.hdf5' 
+            classifier.load_weights(weightsFileName)
+            tensor_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
             
-         prediction_mc_after = np.array(prediction_mc_after)
-         prediction_mc_after=prediction_mc_after.reshape((50,len(test_indices),int(math.ceil((1125-cropSize)/cropDistance)),nb_classes))
+         tensor_mc_after = np.array(prediction_mc_after)
          break
          
       np.save(weightsDirectory+'tensor_validation_set_'+subject+'_Bayesian_'+ model+'_'+ type_training+ '_seed_'+str(i)+'_sin_drop_after.npy', tensor_mc_after, allow_pickle=False)  
-        
+      return tensor_mc_after     
         
         
