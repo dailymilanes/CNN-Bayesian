@@ -51,7 +51,7 @@ def trainBayesian(datalist,labelslist, subject, seed, cropDistance = 2, cropSize
     
     for train_indices, val_indices in cv.split(pseudoTrialList, pseudolabelList):
         
-        baseFileName= weightsDirectory + subject + '_Bayesian_' + model+'_' + type_training + '_seed_'+str(i)
+        baseFileName= weightsDirectory + subject + '_Bayesian_' + model+'_' + type_training + '_d_' + droputStr + '_c_'+str(cropDistance)+'_seed'+str(i) 
         weightFileName=baseFileName + '_weights.hdf5' 
         count_trial= len(train_indices)
         if model='MOPED':  
