@@ -26,19 +26,19 @@ eegBayesianTrain.weightsDirectory = '../Weights/'   # Place where the weights wi
 
 
 ## To train Bayesian Neural Network models using subject-specific (SE) strategy, specify subject, dropout level, distance between crops, size of crops, model 'MOPED' or 'NORMAL'
-eegBayesianTrain.intraSubjectTrain('B01', dropoutRate=0.5, cropDistance = 2, cropSize = 1000, model='MOPED')    # for example to train subject B01 of dataset 2b with Moped method
+eegBayesianTrain.intraSubjectTrain('B01', cropDistance = 2, cropSize = 1000, model='MOPED')    # for example to train subject B01 of dataset 2b using Moped method
 
 ## To train Bayesian Neural Network models using non-subject-specific (NSE) strategy, dropout level, distance between crops, size of crops, model 'MOPED' or 'NORMAL'
-eegBayesianTrain.interSubjectTrain(dropoutRate=0.5, cropDistance = 2, cropSize = 1000, nb_classes = 2, moped=True)  # for example to train with all subjects of dataset 2b, if dataset 2a please replace dropoutRate=0.8 and nb_classes=4
+eegBayesianTrain.interSubjectTrain(cropDistance = 2, cropSize = 1000, nb_classes = 2, model='MOPED')  # for example to train with all subjects of dataset 2b, if dataset 2a please replace dropoutRate=0.8 and nb_classes=4
 
 ## Function to evaluate the different models: MCD, MOPED or NORMAL using 50 forward pass over testing set, and to determinate the accuracy.  
 ## Specified the subject, for example subject='A01' or 'A02' or ...'A09' in dataset 2a, or 'B01' or 'B02' or ... in dataset 2b.
-acc=eegEvaluate.eegEvaluate(subject, cropDistance=2, cropSize=1000, weightsFileName=weightsFileName, model='MCD', accuracy=True)
+acc=eegEvaluate.eegEvaluate(subject, cropDistance=2, cropSize=1000, model='MCD', type_training='SE', accuracy=True)
 
 ## Function to implement the classification with reject option using the adaptative threshold scheme proposed.
-Rc, Rcc, Rcu, UA=adaptative_threshold(subject, cropDistance=2, cropSize=1000, model='MCD')
+Rc, Rcc, Rcu, UA=adaptative_threshold(subject, cropDistance=2, cropSize=1000, model='MCD', type_training='SE')
 
 ## Function to implement the Mobiny method to compare the UA criterion respect to our proposed scheme
-UA_mobiny=mobiny(subject, cropDistance=2, cropSize=1000, model='MCD')
+UA_mobiny=mobiny(subject, cropDistance=2, cropSize=1000, model='MCD', type_training='SE')
 
 
