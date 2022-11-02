@@ -11,18 +11,22 @@ import scipy.io as sio
 from sklearn.model_selection import StratifiedKFold
 import eegBayesianEvaluate
 
-def mobiny_method(subject, ):
+def mobiny_method(subject, cropDistance=2, cropSize=1000, model='MCD', type_training='SE'):
     if  subject[0] == 'A':
         nb_classes=4
         channels=22
         dropoutRate=0.8
-        folds=6       
+        folds=6  
+        strLabels=['Left','Right', 'Foot', 'Tongue']
+        dropoutRate=0.8  
                 
     else:
         nb_classes=2
         channels=3
         dropoutRate=0.5
         folds=5  
+        strLabels=['Left','Right']
+        dropoutRate=0.5
     droputStr = "%0.2f" % dropoutRate 
     
     datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Training/', ['Left','Right','Foot','Tongue'])
@@ -42,7 +46,7 @@ def mobiny_method(subject, ):
        text_label= labelslist[test_indices]
        label=np.repeat(text_label,int(math.ceil((1125-cropSize)/cropDistance)))
        label=label.reshape(len(text_label),int(math.ceil((1125-cropSize)/cropDistance)))   
-       tensor_val=eegBayesianEvaluate.Validation(subject, cropDistance, cropSize, model, datadirectory, weightsDirectory, seed=n)
+       tensor_val=eegBayesianEvaluate.Validation(subject, cropDistance=2, cropSize=1000, model='MCD', accuracy=True, type_training='SE')
        mean=np.mean(tensor_val, axis=0)  
        y=np.argmax(mean, axis=-1)
        true=1*(y==label)    
@@ -83,7 +87,7 @@ def mobiny_method(subject, ):
        max=np.argmax(ua_mobiny, axis=-1)
 
             # Now, we determinate the UA from optimal threshold selected over validation set
-       tensor_test=eegBayesianEvaluate.Evaluation(subject, cropDistance, cropSize, model, datadirectory, weightsDirectory, seed=n) 
+       tensor_test=eegBayesianEvaluate.Evaluate(subject, cropDistance, cropSize, model, datadirectory, weightsDirectory, seed=n) 
        labelslist1=np.array(labelslist1)
        label=np.repeat(labelslist1,int(math.ceil((1125-cropSize)/cropDistance)))
        label=label.reshape(len(datalist1),int(math.ceil((1125-cropSize)/cropDistance)))   # label is a matrix of len(datalist1)x63
