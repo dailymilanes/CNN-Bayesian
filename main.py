@@ -36,7 +36,7 @@ eegBayesianTrain.interSubjectTrain(dropoutRate=0.5, cropDistance = 2, cropSize =
 acc=eegEvaluate.eegEvaluate(subject, cropDistance=2, cropSize=1000, weightsFileName=weightsFileName, model='MCD', accuracy=True)
 
 ## Function to implement the classification with reject option using the adaptative threshold scheme proposed.
-Rc, Rcc, Rcu, UA=Adaptative_threshold(subject, cropDistance=2, cropSize=1000, model='MCD')
+Rc, Rcc, Rcu, UA=adaptative_threshold(subject, cropDistance=2, cropSize=1000, model='MCD')
 
 ## Function to implement the Mobiny method to compare the UA criterion respect to our proposed scheme
 UA_mobiny=mobiny(subject, cropDistance=2, cropSize=1000, model='MCD')
