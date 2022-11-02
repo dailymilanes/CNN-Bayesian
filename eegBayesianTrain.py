@@ -17,6 +17,7 @@ from sklearn.model_selection import StratifiedKFold, RepeatedStratifiedKFold
 import math
 import numpy as np
 
+
 # Global Variable that contains the path where the dataset is preprocessed
 dataDirectory = ''
 
@@ -55,11 +56,11 @@ def trainBayesian(datalist,labelslist, subject, seed, cropDistance = 2, cropSize
         count_trial= len(train_indices)
         if model='MOPED':  
           obtainWeights(subject,cropSize=cropSize, dropoutRate=dropoutRate,channels = channels,nb_classes=nb_classes, seed=seed)  
-          classifier = SCNBayesianTL(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
+          classifier = eegBayesianUtils.SCNBayesianTL(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
           file = baseFileName+'_with_prior_var_0.1_no_drop.json'
         else:
-          classifier = SCNBayesian(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
+          classifier = eegBayesianUtils.SCNBayesian(nb_classes = nb_classes, Chans = channels,Samples = cropSize, 
                                         dropoutRate = dropoutRate,cropDistance=cropDistance, count_trial=count_trial)
           file = baseFileName+'_no_prior_no_drop.json'
          
