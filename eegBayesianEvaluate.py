@@ -79,7 +79,10 @@ def Evaluate(subject, cropDistance, cropSize, model, datadirectory, weightsFileN
            tensor_mc_after[:,j,:,:]=prediction_mc_after[:,k,:,:]
 
       np.save(weightsDirectory+'tensor_'+subject+'_Bayesian_'+ model+'_'+ type_training+ '_seed_'+str(i)+'_sin_drop_after.npy', tensor_mc_after, allow_pickle=False)  
-        
+      if accuracy==true:
+         return accuracy
+      else:
+         return tensor_mc_after
         
 def Validation(subject, cropDistance, cropSize, model, datadirectory, weightsFileName):
          
