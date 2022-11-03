@@ -33,7 +33,7 @@ eegBayesianTrain.interSubjectTrain(cropDistance = 2, cropSize = 1000, nb_classes
 
 ## Function to evaluate the different models: MCD, MOPED or NORMAL using 50 forward pass over testing set, and to determinate the accuracy.  
 ## Specified the subject, for example subject='A01' or 'A02' or ...'A09' in dataset 2a, or 'B01' or 'B02' or ... in dataset 2b.
-acc=eegEvaluate.eegEvaluate(subject, cropDistance=2, cropSize=1000, model='MCD', type_training='SE', accuracy=True)
+acc=eegEvaluate.accuracy(subject, cropDistance=2, cropSize=1000, model='MCD', type_training='SE', accuracy=True)
 
 ## Function to implement the classification with reject option using the adaptative threshold scheme proposed.
 Rc, Rcc, Rcu, UA=adaptative_threshold(subject, cropDistance=2, cropSize=1000, model='MCD', type_training='SE')
