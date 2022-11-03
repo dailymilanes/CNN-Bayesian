@@ -54,7 +54,7 @@ def accuracy(subject, cropDistance=2, cropSize=1000, model='MCD', type_training=
     datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Evaluating/', strLabels)
              
     for i in range(1,17):
-       tensor= Evaluate(subject, datalist, labelslist, nb_classes, folds, cropDistance=cropDistance, cropSize=cropSize, seed=i, model=model, type_training=type_training) 
+       tensor= eegEvaluate.evaluation(subject, datalist, labelslist, nb_classes, folds, cropDistance=cropDistance, cropSize=cropSize, seed=i, model=model, type_training=type_training) 
        mean=np.mean(tensor, axis=0)     # tensor of len(datalist) x number of crops x nb_classes
        y=np.argmax(mean, axis=-1)
        true=(y==label)
