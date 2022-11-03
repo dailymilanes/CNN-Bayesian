@@ -88,29 +88,29 @@ def mobiny_method(subject, cropDistance=2, cropSize=1000, model='MCD', type_trai
        true=1*(y==label)
        test=np.zeros((len(datalist1),int(math.ceil((1125-cropSize)/cropDistance))))
        entropy_test=st.entropy(mean,base=2,axis=-1)/np.log2(nb_classes)
-       ciertos_good_test=0
-       ciertos_bad_test=0
-       inciertos_good_test=0
-       inciertos_bad_test=0
+       certain_good_test=0
+       certain_bad_test=0
+       uncertain_good_test=0
+       uncertain_bad_test=0
        for i in range(len(datalist1)):
           for j in range(int(math.ceil((1125-cropSize)/cropDistance))): 
               if entropy_test[i,j] < max/len(threshold)+0.05:
                  test[i,j]=True
                  if true[i,j]==True:
-                     ciertos_good_test=ciertos_good_test + 1
+                     certain_good_test=certain_good_test + 1
                  else:
-                      ciertos_bad_test=ciertos_bad_test+1
+                      certain_bad_test=certain_bad_test+1
               else:
                  test[i,j]=False
                  if true[i,j]==True:
-                     inciertos_good_test=inciertos_good_test + 1
+                     uncertain_good_test=uncertain_good_test + 1
                  else:
-                     inciertos_bad_test=inciertos_bad_test+1
+                     uncertain_bad_test=uncertain_bad_test+1
        
-       mobiny_result[ind2,0]=ciertos_good_test
-       mobiny_result[ind2,1]=inciertos_good_test
-       mobiny_result[ind2,2]=ciertos_bad_test
-       mobiny_result[ind2,3]=inciertos_bad_test
+       mobiny_result[ind2,0]=certain_good_test
+       mobiny_result[ind2,1]=uncertain_good_test
+       mobiny_result[ind2,2]=certain_bad_test
+       mobiny_result[ind2,3]=uncertain_bad_test
        ind2==ind2+1    
     ua_result=(np.sum(mobiny_result[:,0])+np.sum(mobiny_result[:,3]))/(np.sum(mobiny_result[:,0])+np.sum(mobiny_result[:,1])+np.sum(mobiny_result[:,2])+np.sum(mobiny_result[:,3]))*100   
     return ua_result           
