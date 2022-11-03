@@ -57,14 +57,14 @@ def accuracy(subject, cropDistance=2, cropSize=1000, model='MCD', type_training=
        cv = StratifiedKFold(n_splits = folds, random_state=i, shuffle=True)
        pseudoTrialList = range(len(datalist))
        pseudolabelList = np.array(labelslist)
-       tensor=llamar evaluate (subject, datalist, model,type_training) 
-       mean=np.mean(tensor_mc, axis=0)     # tensor of 288 x 63 x nb_classes
+       tensor= Evaluate(subject, cropDistance=cropDistance, cropSize=cropSize, model=model, type_training=type_training) 
+       mean=np.mean(tensor, axis=0)     # tensor of 288 x 63 x nb_classes
        y=np.argmax(mean, axis=-1)
        true=(y==label)
        list_true=true.reshape(len(datalist)*int(math.ceil((1125-cropSize)/cropDistance)))
-       goods=np.sum(list_true1==True)
-       bads=np.sum(list_true1==False)
-       acc_Bay[cont]=goods1/(goods1+bads1)
+       goods=np.sum(list_true==True)
+       bads=np.sum(list_true==False)
+       acc_Bay[cont]=goods/(goods+bads)
        cont=cont+1  
     accuracy=no.mean(acc_Bay)
     return accuracy    
@@ -87,7 +87,7 @@ def Evaluate(subject, cropDistance=2, cropSize=1000, model='MCD', accuracy=True)
         strLabels=['Left','Right']
         
     droputStr = "%0.2f" % dropoutRate 
-        
+    
     datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Evaluating/', strLabels)
     tensor_mc_after=np.zeros((50,len(datalist),int(math.ceil((1125-cropSize)/cropDistance)),nb_classes))
          
