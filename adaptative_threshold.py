@@ -17,24 +17,26 @@ def adaptative_threshold(subject, model, ):
         nb_classes=4
         channels=22
         dropoutRate=0.8
-        folds=6       
+        folds=6  
+        strLabels=['Left','Right', 'Foot', 'Tongue']
                 
     else:
         nb_classes=2
         channels=3
         dropoutRate=0.5
         folds=5  
+        strLabels=['Left','Right']
     droputStr = "%0.2f" % dropoutRate 
     
-    datalist1, labelslist1 = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Evaluating/', ['Left','Right','Foot','Tongue'])
+    datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Evaluating/', strLabels)
     ind=0
     result_95=np.zeros([16,4])
     result_99=np.zeros([16,4])
     for n in range(1,17):   
-       tensor_test=eegBayesianEvaluate.Evaluation(subject, cropDistance, cropSize, model, datalist1, weightsDirectory, seed=n) 
-       labelslist1=np.array(labelslist1)
-       label=np.repeat(labelslist1,int(math.ceil((1125-cropSize)/cropDistance)))
-       label=label.reshape(len(datalist1),int(math.ceil((1125-cropSize)/cropDistance)))   # label is a matrix of len(datalist1)x63
+       tensor_test= Evaluate(subject, datalist, labelslist, nb_classes, folds, cropDistance=cropDistance, cropSize=cropSize, seed=i, model=model, type_training=type_training) 
+       labelslist=np.array(labelslist)
+       label=np.repeat(labelslist,int(math.ceil((1125-cropSize)/cropDistance)))
+       label=label.reshape(len(datalist),int(math.ceil((1125-cropSize)/cropDistance)))   # label is a matrix of len(datalist1)x63
        mean=np.mean(tensor_test, axis=0)  
        y=np.argmax(mean, axis=-1)
        true=1*(y==label)
@@ -65,7 +67,7 @@ def adaptative_threshold(subject, model, ):
                 desv[i,j]=np.std(dif)
                 mean_dif[i,j]=np.mean(dif)
                 
-           # New_test with 99% of confidence level (2.326) using margen of confidence as metric of uncertainty
+           # New_test with 99% of confidence level (2.326) using margen of confidence as uncertainty metric
                 if mean_dif[i,j]> desv[i,j]*2.326/math.sqrt(50):
                    ztest_99[i,j]=True
                    value_ztest_99[i,j]=mean_dif[i,j]-desv[i,j]*2.326/math.sqrt(50)
@@ -74,7 +76,7 @@ def adaptative_threshold(subject, model, ):
                    ztest_99[i,j]=False
                    value_ztest_99[i,j]=mean_dif[i,j]-desv[i,j]*2.326/math.sqrt(50)
                
-           # New_test with 95% of confidence level (1.645) using margen of confidence as metric of uncertainty
+           # New_test with 95% of confidence level (1.645) using margen of confidence as uncertainty metric
                 if mean_dif[i,j]> desv[i,j]*1.645/math.sqrt(50):
                    ztest_95[i,j]=True
                    value_ztest_95[i,j]=mean_dif[i,j]-desv[i,j]*1.645/math.sqrt(50)
@@ -131,4 +133,4 @@ def adaptative_threshold(subject, model, ):
     rcc_99=np.sum(result_99[:,0])/(np.sum(result_99[:,0])+np.sum(result_99[:,2]))*100  
     rcu_99=np.sum(result_99[:,1])/(np.sum(result_99[:,1])+np.sum(result_99[:,3]))*100     
     ua_99=(np.sum(result_99[:,0])+np.sum(result_99[:,3]))/(np.sum(result_99[:,0])+np.sum(result_99[:,1])+np.sum(result_99[:,2])+np.sum(result_99[:,3]))*100 
-    return rc_95, rcc_95, rcu_95, ua_95           
+    return rc_95, rcc_95, rcu_95, ua_95   # only for 95% of confidence level, if you want, add rc_99, rcc_99, rcu_99 and ua_99 for 99% of confidence level.           
