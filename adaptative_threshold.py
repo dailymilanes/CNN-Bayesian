@@ -12,7 +12,7 @@ from sklearn.model_selection import StratifiedKFold
 import eegBayesianEvaluate
 import eegBayesianUtils
 
-def adaptative_threshold(subject, model, ):
+def adaptative_threshold(subject, cropDistance=2, cropSize=1000, model='MCD', type_training='SE'):
     if  subject[0] == 'A':
         nb_classes=4
         channels=22
@@ -33,7 +33,7 @@ def adaptative_threshold(subject, model, ):
     result_95=np.zeros([16,4])
     result_99=np.zeros([16,4])
     for n in range(1,17):   
-       tensor_test= Evaluate(subject, datalist, labelslist, nb_classes, folds, cropDistance=cropDistance, cropSize=cropSize, seed=i, model=model, type_training=type_training) 
+       tensor_test= eegEvaluate.evaluation(subject, datalist, labelslist, nb_classes, folds, cropDistance=cropDistance, cropSize=cropSize, seed=i, model=model, type_training=type_training) 
        labelslist=np.array(labelslist)
        label=np.repeat(labelslist,int(math.ceil((1125-cropSize)/cropDistance)))
        label=label.reshape(len(datalist),int(math.ceil((1125-cropSize)/cropDistance)))   # label is a matrix of len(datalist1)x63
