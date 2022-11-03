@@ -111,25 +111,9 @@ def evaluation(subject, datalist, labelslist, nb_classes, folds=5, cropDistance=
     np.save(weightsDirectory+'tensor_'+subject+'_Bayesian_'+ model+'_'+ type_training+ '_seed_'+str(i)+'_sin_drop_after.npy', tensor_after, allow_pickle=False)  
     return tensor_after
         
-def validation(subject, cropDistance, cropSize, model, datadirectory, weightsFileName):
+def validation(subject, datalist, labelslist, nb_classes, folds=5, cropDistance=2, cropSize=1000, seed=1, model='MCD', type_training='SE'):
          
-    if  subject[0] == 'A':
-        nb_classes=4
-        channels=22
-        dropoutRate=0.8
-        folds=6
-        strLabels=['Left','Right', 'Foot', 'Tongue']
-    else:
-        nb_classes=2
-        channels=3
-        dropoutRate=0.5
-        folds=5
-        strLabels=['Left','Right']
-        
-    droputStr = "%0.2f" % dropoutRate 
-        
-    datalist, labelslist = eegBayesianUtils.load_eeg(dataDirectory + subject+'/Training/', ['Left','Right','Foot','Tongue'])
-    tensor_mc_after=np.zeros((50,len(datalist)/folds,int(math.ceil((1125-cropSize)/cropDistance)),nb_classes))
+    tensor_val_after=np.zeros((50,len(datalist)/folds,int(math.ceil((1125-cropSize)/cropDistance)),nb_classes))
     for i in range(1,17):  
       cv = StratifiedKFold(n_splits = folds, random_state=i, shuffle=True)
       pseudoTrialList = range(len(datalist))
@@ -163,10 +147,11 @@ def validation(subject, cropDistance, cropSize, model, datadirectory, weightsFil
             classifier.load_weights(weightsFileName)
             tensor_mc_after =[classifier.predict(test_data, batch_size=32) for _ in range(50)]
             
-         tensor_mc_after = np.array(prediction_mc_after)
+         tensor_val_after = np.array(tensor_mc_after)
+         tensor_val_after=tensor_val_after.reshape((50,len(test_indices),int(math.ceil((1125-cropSize)/cropDistance)),nb_classes))
          break
          
       np.save(weightsDirectory+'tensor_validation_set_'+subject+'_Bayesian_'+ model+'_'+ type_training+ '_seed_'+str(i)+'_sin_drop_after.npy', tensor_mc_after, allow_pickle=False)  
-      return tensor_mc_after     
+      return tensor_val_after     
         
         
